@@ -39,14 +39,14 @@ fn shared_fused() {
 fn shared_sequential() {
     let fold = dom::fold(sum_init, sum_acc, sum_fin);
     let graph = dom::treeish_visit(tree_children);
-    assert_eq!(hylic_benchmark::statics::SEQUENTIAL.run(&fold, &graph, &sample_tree()), EXPECTED);
+    assert_eq!(dom::exec(hylic_benchmark::executor::sequential::Spec).run(&fold, &graph, &sample_tree()), EXPECTED);
 }
 
 #[test]
 fn shared_rayon() {
     let fold = dom::fold(sum_init, sum_acc, sum_fin);
     let graph = dom::treeish_visit(tree_children);
-    assert_eq!(hylic_benchmark::statics::RAYON.run(&fold, &graph, &sample_tree()), EXPECTED);
+    assert_eq!(dom::exec(hylic_benchmark::executor::rayon::Spec).run(&fold, &graph, &sample_tree()), EXPECTED);
 }
 
 // ── Local domain: executors ───────────────────────

@@ -1,5 +1,4 @@
-//! Head-to-head: all executor types on the general scenario set.
-//! rayon, hylo, funnel(robust) + handrolled baselines.
+//! Head-to-head: key executor types on the general scenario set.
 
 #[path = "support/mod.rs"]
 mod support;
@@ -8,40 +7,44 @@ use criterion::{criterion_group, criterion_main, Criterion};
 use std::hint::black_box;
 use hylic::cata::exec::funnel;
 use hylic_parallel_lifts::{WorkPool, WorkPoolSpec};
-
-use support::config;
 use support::scenario::{self, Scale, PreparedScenario};
-use support::runners::{self, FunnelSpecs};
-use support::bench_cell;
+use support::executor_set::{ExecutorSet, FunnelSpecs};
+use support::{runners, baselines, bench_cell};
 
 fn bench_executor_compare(c: &mut Criterion) {
-    let mut group = c.benchmark_group("executor-compare");
-    let nw = config::bench_workers();
-    let funnel_specs = FunnelSpecs::new(nw);
+    let nw = support::config::bench_workers();
 
     WorkPool::with(WorkPoolSpec::threads(nw), |wpool| {
         funnel::Pool::with(nw, |fpool| {
+            let es = ExecutorSet {
+                wpool, fpool, nw,
+                sheque: hylic_benchmark::executor::hylo_sheque::Spec::default(nw),
+                funnel: FunnelSpecs::new(nw),
+            };
+            let mut group = c.benchmark_group("executor-compare");
+
             for def in scenario::all_scenarios(Scale::from_env()) {
                 let s = PreparedScenario::from_def(&def, "sm");
+                let p = s.as_problem();
 
                 let all = vec![
-                    runners::rayon(&s),
-                    runners::sheque(&s, wpool),
-                    runners::funnel_variant("funnel", &s, fpool, &funnel_specs.pw_final),
-                    runners::hand_rayon(&s),
-                    runners::hand_pool(&s, wpool),
+                    runners::rayon(&p),
+                    runners::sheque(&p, &es),
+                    runners::funnel_variant("funnel.pw.fin", &p, &es, es.funnel.pw_final),
+                    baselines::hand_rayon(&s),
+                    baselines::hand_pool(&s, wpool),
                 ];
 
                 for r in &all {
-                    bench_cell(&mut group, r.name, &s.name,
+                    bench_cell(&mut group, r.name, &p.name,
                         |b, _| b.iter(|| black_box((r.run)())),
                     );
                 }
             }
+
+            group.finish();
         });
     });
-
-    group.finish();
 }
 
 criterion_group!(benches, bench_executor_compare);

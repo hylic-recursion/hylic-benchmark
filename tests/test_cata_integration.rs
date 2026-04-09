@@ -19,7 +19,7 @@ fn all_executors_match() {
     let my_fold = dom::simple_fold(|n: &N| n.val as u64, |a: &mut u64, c: &u64| { *a += c; });
 
     assert_eq!(dom::FUSED.run(&my_fold, &graph, &tree), 10);
-    assert_eq!(hylic_benchmark::statics::RAYON.run(&my_fold, &graph, &tree), 10);
+    assert_eq!(dom::exec(hylic_benchmark::executor::rayon::Spec).run(&my_fold, &graph, &tree), 10);
 }
 
 #[test]
@@ -41,7 +41,7 @@ fn all_executors_vec_fold() {
     let my_fold = vec_fold(format);
 
     assert_eq!(dom::FUSED.run(&my_fold, &graph, &tree), "a[b[d, e], c]");
-    assert_eq!(hylic_benchmark::statics::RAYON.run(&my_fold, &graph, &tree), "a[b[d, e], c]");
+    assert_eq!(dom::exec(hylic_benchmark::executor::rayon::Spec).run(&my_fold, &graph, &tree), "a[b[d, e], c]");
 }
 
 #[test]
@@ -91,10 +91,10 @@ fn lifts_domain_generic_comprehensive() {
     WorkPool::with(WorkPoolSpec::threads(nt), |pool| {
         // Shared: all executor x lift combos
         assert_eq!(dom::FUSED.run_lifted(&ParLazy::lift(pool), &shared_fold, &shared_graph, &tree), expected, "Lazy+Fused+Shared");
-        assert_eq!(hylic_benchmark::statics::RAYON.run_lifted(&ParLazy::lift(pool), &shared_fold, &shared_graph, &tree), expected, "Lazy+Rayon+Shared");
+        assert_eq!(dom::exec(hylic_benchmark::executor::rayon::Spec).run_lifted(&ParLazy::lift(pool), &shared_fold, &shared_graph, &tree), expected, "Lazy+Rayon+Shared");
 
         assert_eq!(dom::FUSED.run_lifted(&ParEager::lift(pool, EagerSpec::default_for(nt)), &shared_fold, &shared_graph, &tree), expected, "Eager+Fused+Shared");
-        assert_eq!(hylic_benchmark::statics::RAYON.run_lifted(&ParEager::lift(pool, EagerSpec::default_for(nt)), &shared_fold, &shared_graph, &tree), expected, "Eager+Rayon+Shared");
+        assert_eq!(dom::exec(hylic_benchmark::executor::rayon::Spec).run_lifted(&ParEager::lift(pool, EagerSpec::default_for(nt)), &shared_fold, &shared_graph, &tree), expected, "Eager+Rayon+Shared");
 
         // Local: Fused x lift combos
         let (lf, lg) = (make_local_fold(), make_local_graph());

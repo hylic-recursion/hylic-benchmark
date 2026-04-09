@@ -2,10 +2,13 @@
 
 pub mod tree;
 pub mod work;
+pub mod problem;
+pub mod executor_set;
 pub mod scenario;
-pub mod config;
 pub mod runners;
+pub mod baselines;
 pub mod module_sim;
+pub mod config;
 
 use criterion::{BenchmarkGroup, BenchmarkId, measurement::WallTime};
 

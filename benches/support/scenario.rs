@@ -1,6 +1,7 @@
 use std::sync::Arc;
 use hylic::domain::shared::{self as dom, Treeish};
 
+use super::problem::BenchProblem;
 use super::tree::{self, NodeId, TreeSpec};
 use super::work::WorkSpec;
 
@@ -65,6 +66,16 @@ impl PreparedScenario {
             treeish,
             root: 0,
             expected,
+        }
+    }
+
+    pub fn as_problem(&self) -> BenchProblem<NodeId> {
+        BenchProblem {
+            name: self.name.clone(),
+            fold: self.fold.clone(),
+            treeish: self.treeish.clone(),
+            root: self.root,
+            expected: self.expected,
         }
     }
 }

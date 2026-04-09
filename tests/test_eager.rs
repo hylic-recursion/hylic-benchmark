@@ -61,12 +61,12 @@ fn run_case(label: &str, nodes: usize, bf: usize, gc: u64, fc: u64, iters: u32) 
 
     eprintln!("\n=== {} ({} nodes, bf={}) ===", label, count, bf);
     timed("fused",        iters, expected, || dom::FUSED.run(&fold, &graph, &ROOT));
-    timed("rayon",        iters, expected, || hylic_benchmark::statics::RAYON.run(&fold, &graph, &ROOT));
+    timed("rayon",        iters, expected, || dom::exec(hylic_benchmark::executor::rayon::Spec).run(&fold, &graph, &ROOT));
     WorkPool::with(WorkPoolSpec::threads(3), |pool| {
         timed("parref+fused", iters, expected, || dom::FUSED.run_lifted(&ParLazy::lift(pool), &fold, &graph, &ROOT));
-        timed("parref+rayon", iters, expected, || hylic_benchmark::statics::RAYON.run_lifted(&ParLazy::lift(pool), &fold, &graph, &ROOT));
+        timed("parref+rayon", iters, expected, || dom::exec(hylic_benchmark::executor::rayon::Spec).run_lifted(&ParLazy::lift(pool), &fold, &graph, &ROOT));
         timed("eager+fused", iters, expected, || dom::FUSED.run_lifted(&ParEager::lift(pool, EagerSpec::default_for(3)), &fold, &graph, &ROOT));
-        timed("eager+rayon", iters, expected, || hylic_benchmark::statics::RAYON.run_lifted(&ParEager::lift(pool, EagerSpec::default_for(3)), &fold, &graph, &ROOT));
+        timed("eager+rayon", iters, expected, || dom::exec(hylic_benchmark::executor::rayon::Spec).run_lifted(&ParEager::lift(pool, EagerSpec::default_for(3)), &fold, &graph, &ROOT));
     });
 }
 

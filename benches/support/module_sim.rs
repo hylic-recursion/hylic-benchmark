@@ -8,8 +8,6 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use hylic::domain::shared as dom;
 
-use hylic_parallel_lifts::WorkPool;
-
 use super::work::{busy_work, spin_wait_us};
 
 // -- Shared types --
@@ -189,33 +187,25 @@ pub fn all_module_scenarios(large: bool) -> Vec<ModuleSimSpec> {
     ]
 }
 
-/// Build all module sim modes: vanilla baselines + hylic Shared modes.
-/// Takes a callback because fold/graph are constructed internally.
-pub fn with_all_modes<'a, F>(sim: &'a PreparedModuleSim, pool: &'a Arc<WorkPool>, f: F)
-where F: FnOnce(&[super::runners::Runner<'_>])
-{
-    use super::runners::Runner;
-    use hylic_parallel_lifts::{ParLazy, ParEager};
-
+/// Build a BenchProblem<String> from a prepared module sim.
+pub fn as_problem(sim: &PreparedModuleSim) -> super::problem::BenchProblem<String> {
     let fold = hylic_fold(sim);
-    let graph = hylic_treeish(&sim.registry);
-    let root = &sim.root_name;
+    let treeish = hylic_treeish(&sim.registry);
+    let expected = dom::FUSED.run(&fold, &treeish, &sim.root_name);
+    super::problem::BenchProblem {
+        name: sim.name.clone(),
+        fold,
+        treeish,
+        root: sim.root_name.clone(),
+        expected,
+    }
+}
 
-    let par_lazy_fused  = ParLazy::lift::<hylic::domain::Shared, String, u64, u64>(pool);
-    let par_lazy_rayon  = ParLazy::lift::<hylic::domain::Shared, String, u64, u64>(pool);
-    let par_eager_fused = ParEager::lift::<hylic::domain::Shared, String, u64, u64>(pool, hylic_parallel_lifts::EagerSpec::default_for(super::config::bench_workers()));
-    let par_eager_rayon = ParEager::lift::<hylic::domain::Shared, String, u64, u64>(pool, hylic_parallel_lifts::EagerSpec::default_for(super::config::bench_workers()));
-
-    let runners: Vec<Runner<'_>> = vec![
-        Runner { name: "vanilla.seq",     run: Box::new(|| vanilla_seq(sim)) },
-        Runner { name: "vanilla.rayon",   run: Box::new(|| vanilla_rayon(sim)) },
-        Runner { name: "fused",           run: Box::new(|| dom::FUSED.run(&fold, &graph, root)) },
-        Runner { name: "rayon",           run: Box::new(|| hylic_benchmark::statics::RAYON.run(&fold, &graph, root)) },
-        Runner { name: "fused.par-lazy",   run: Box::new(|| dom::FUSED.run_lifted(&par_lazy_fused, &fold, &graph, root)) },
-        Runner { name: "rayon.par-lazy",  run: Box::new(|| hylic_benchmark::statics::RAYON.run_lifted(&par_lazy_rayon, &fold, &graph, root)) },
-        Runner { name: "fused.par-eager", run: Box::new(|| dom::FUSED.run_lifted(&par_eager_fused, &fold, &graph, root)) },
-        Runner { name: "rayon.par-eager", run: Box::new(|| hylic_benchmark::statics::RAYON.run_lifted(&par_eager_rayon, &fold, &graph, root)) },
-    ];
-
-    f(&runners);
+/// Vanilla baselines (domain-specific, no hylic).
+pub fn vanilla_baselines<'a>(sim: &'a PreparedModuleSim) -> Vec<super::runners::Runner<'a>> {
+    use super::runners::Runner;
+    vec![
+        Runner { name: "vanilla.seq",   run: Box::new(|| vanilla_seq(sim)) },
+        Runner { name: "vanilla.rayon", run: Box::new(|| vanilla_rayon(sim)) },
+    ]
 }

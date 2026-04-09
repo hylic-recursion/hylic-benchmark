@@ -1,11 +1,8 @@
-//! Funnel policy matrix vs hylomorphic and rayon baselines.
+//! Funnel policy matrix vs sheque and rayon baselines.
 //!
-//! 8 funnel policy variants × 6 tuned scenarios. Each variant uses
+//! 8 funnel policy variants x 6 tuned scenarios. Each variant uses
 //! Pool::with for realistic pool-reuse measurement. Per-fold memory
-//! (arenas, stores) is fresh each iteration — only threads reused.
-//!
-//! This is the benchmark used by the tier1 isolation experiment
-//! (run-all.sh) for cross-variant comparison.
+//! is fresh each iteration — only threads reused.
 
 #[path = "support/mod.rs"]
 mod support;
@@ -14,13 +11,11 @@ use criterion::{criterion_group, criterion_main, Criterion};
 use std::hint::black_box;
 use hylic::cata::exec::funnel;
 use hylic_parallel_lifts::{WorkPool, WorkPoolSpec};
-
 use support::scenario::{Scale, PreparedScenario, ScenarioDef};
 use support::tree::TreeSpec;
 use support::work::WorkSpec;
-use support::config;
-use support::runners::{self, FunnelSpecs};
-use support::bench_cell;
+use support::executor_set::{ExecutorSet, FunnelSpecs};
+use support::{runners, baselines, bench_cell};
 
 fn hylo_scenarios(_scale: Scale) -> Vec<ScenarioDef> {
     let w = |init, acc, fin, graph, io| WorkSpec {
@@ -38,26 +33,31 @@ fn hylo_scenarios(_scale: Scale) -> Vec<ScenarioDef> {
 }
 
 fn bench_hylo_compare(c: &mut Criterion) {
-    let nw = config::bench_workers();
-    let funnel_specs = FunnelSpecs::new(nw);
+    let nw = support::config::bench_workers();
     eprintln!("[hylo-compare] using {nw} worker threads");
 
     WorkPool::with(WorkPoolSpec::threads(nw), |wpool| {
         funnel::Pool::with(nw, |fpool| {
+            let es = ExecutorSet {
+                wpool, fpool, nw,
+                sheque: hylic_benchmark::executor::hylo_sheque::Spec::default(nw),
+                funnel: FunnelSpecs::new(nw),
+            };
             let mut group = c.benchmark_group("hylo-compare");
 
             for def in hylo_scenarios(Scale::from_env()) {
                 let s = PreparedScenario::from_def(&def, "sm");
+                let p = s.as_problem();
 
                 let mut all = vec![
-                    runners::rayon(&s),
-                    runners::hand_rayon(&s),
-                    runners::sheque(&s, wpool),
+                    runners::rayon(&p),
+                    baselines::hand_rayon(&s),
+                    runners::sheque(&p, &es),
                 ];
-                all.extend(runners::funnel_runners(&s, fpool, &funnel_specs));
+                all.extend(runners::funnel_runners(&p, &es));
 
                 for r in &all {
-                    bench_cell(&mut group, r.name, &s.name,
+                    bench_cell(&mut group, r.name, &p.name,
                         |b, _| b.iter(|| black_box((r.run)())),
                     );
                 }
