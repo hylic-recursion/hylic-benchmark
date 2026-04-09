@@ -1,0 +1,34 @@
+[package]
+name = "hylic-benchmark"
+version = "0.1.0"
+edition = "2024"
+description = "Benchmark suite and comparison executors for hylic"
+
+[dependencies]
+hylic = { path = "../hylic" }
+hylic-parallel-lifts = { path = "../hylic-parallel-lifts" }
+rayon = "1.10"
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+rand = "0.8"
+
+[[bench]]
+name = "bench_sequential"
+harness = false
+
+[[bench]]
+name = "bench_parallel"
+harness = false
+
+[[bench]]
+name = "bench_module_sim"
+harness = false
+
+[[bench]]
+name = "bench_executor_compare"
+harness = false
+
+[[bench]]
+name = "bench_hylo_compare"
+harness = false
