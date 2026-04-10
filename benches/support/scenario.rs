@@ -90,6 +90,27 @@ fn w(init: u64, acc: u64, fin: u64, graph: u64, io: u64) -> WorkSpec {
     WorkSpec { init_work: init, accumulate_work: acc, finalize_work: fin, graph_work: graph, graph_io_us: io }
 }
 
+/// Subset for the quick benchmark: scenarios where funnel vs baseline
+/// shows meaningful variation. Excludes near-parity workloads
+/// (io, graph-io, deep, fin, lg-dense).
+pub fn quick_scenarios(scale: Scale) -> Vec<ScenarioDef> {
+    let (n, _n_large) = match scale {
+        Scale::Small => (200, 500),
+        Scale::Large => (2000, 5000),
+    };
+    vec![
+        def("noop",         "noop",     TreeSpec { node_count: n, branch_factor: 8 },  w(0, 0, 0, 0, 0)),
+        def("hashtable",    "hash",     TreeSpec { node_count: n, branch_factor: 8 },  w(5_000, 1_000, 0, 5_000, 0)),
+        def("parse-light",  "parse-lt", TreeSpec { node_count: n, branch_factor: 8 },  w(50_000, 5_000, 5_000, 10_000, 0)),
+        def("parse-heavy",  "parse-hv", TreeSpec { node_count: n, branch_factor: 8 },  w(200_000, 10_000, 10_000, 50_000, 0)),
+        def("aggregate",    "aggr",     TreeSpec { node_count: n, branch_factor: 8 },  w(5_000, 100_000, 5_000, 5_000, 0)),
+        def("transform",    "xform",    TreeSpec { node_count: n, branch_factor: 8 },  w(5_000, 5_000, 100_000, 5_000, 0)),
+        def("balanced",     "bal",      TreeSpec { node_count: n, branch_factor: 8 },  w(50_000, 50_000, 50_000, 50_000, 0)),
+        def("wide-shallow", "wide",     TreeSpec { node_count: n, branch_factor: 20 }, w(50_000, 10_000, 10_000, 10_000, 0)),
+        def("graph-heavy",  "graph-hv", TreeSpec { node_count: n, branch_factor: 8 },  w(5_000, 10_000, 5_000, 200_000, 0)),
+    ]
+}
+
 // ANCHOR: scenario_catalog
 pub fn all_scenarios(scale: Scale) -> Vec<ScenarioDef> {
     let (n, n_large) = match scale {
