@@ -11,11 +11,13 @@ use hylic::cata::exec::{Executor, ExecutorSpec};
 
 #[derive(Clone, Copy)]
 pub struct Spec {
-    pub n_workers: usize,
+    /// Pool size for `.run()` and `.session()`. Not consulted when
+    /// attaching to an explicit pool via `.attach()`.
+    pub default_pool_size: usize,
 }
 
 impl Spec {
-    pub fn default(n_workers: usize) -> Self { Spec { n_workers } }
+    pub fn default(n_workers: usize) -> Self { Spec { default_pool_size: n_workers } }
 }
 
 impl ExecutorSpec for Spec {
@@ -27,7 +29,7 @@ impl ExecutorSpec for Spec {
     }
 
     fn with_session<R>(&self, f: impl for<'s> FnOnce(&Session<'s>) -> R) -> R {
-        WorkPool::with(WorkPoolSpec::threads(self.n_workers), |pool| {
+        WorkPool::with(WorkPoolSpec::threads(self.default_pool_size), |pool| {
             f(&(*self).attach(pool))
         })
     }

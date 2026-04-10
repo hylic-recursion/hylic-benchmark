@@ -14,21 +14,13 @@ criterion = { version = "0.5", features = ["html_reports"] }
 rand = "0.8"
 
 [[bench]]
-name = "bench_sequential"
+name = "bench_overhead"
 harness = false
 
 [[bench]]
-name = "bench_parallel"
+name = "bench_matrix"
 harness = false
 
 [[bench]]
-name = "bench_module_sim"
-harness = false
-
-[[bench]]
-name = "bench_executor_compare"
-harness = false
-
-[[bench]]
-name = "bench_hylo_compare"
+name = "bench_modsim"
 harness = false

@@ -8,11 +8,19 @@ use std::sync::Arc;
 use hylic_parallel_lifts::{WorkPool, fork_join_map, SyncRef};
 
 use super::runners::Runner;
+use super::problem::BenchProblem;
 use super::tree::NodeId;
 use super::work::WorkSpec;
 use super::scenario::PreparedScenario;
 
-// ── NodeId baselines (for scenario-based benchmarks) ──
+// ── Fused executor (hylic sequential baseline) ──────
+
+pub fn fused<'a, N: Clone + 'static>(p: &'a BenchProblem<N>) -> Runner<'a> {
+    use hylic::domain::shared as dom;
+    Runner { name: "fused", run: Box::new(|| dom::FUSED.run(&p.fold, &p.treeish, &p.root)) }
+}
+
+// ── Handrolled baselines (no hylic, raw recursion) ──
 
 pub fn hand_seq<'a>(s: &'a PreparedScenario) -> Runner<'a> {
     Runner { name: "hand.seq", run: Box::new(|| handrolled_seq(s)) }
@@ -39,9 +47,10 @@ pub fn real_rayon<'a>(s: &'a PreparedScenario) -> Runner<'a> {
     Runner { name: "real.rayon", run: Box::new(|| realworld_rayon(s)) }
 }
 
-/// All handrolled baselines for NodeId scenarios.
+/// Parallel handrolled baselines for the matrix benchmark.
+/// Sequential baselines (hand.seq, real.seq) are in the overhead suite only.
 pub fn hand_baselines<'a>(s: &'a PreparedScenario, wpool: &'a Arc<WorkPool>) -> Vec<Runner<'a>> {
-    vec![hand_seq(s), hand_rayon(s), hand_pool(s, wpool), real_seq(s), real_rayon(s)]
+    vec![hand_rayon(s), hand_pool(s, wpool), real_rayon(s)]
 }
 
 // ── Implementations ─────────────────────────────────

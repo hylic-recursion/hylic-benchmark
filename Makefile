@@ -1,45 +1,31 @@
-.PHONY: bench-compare bench bench-full bench-finish \
-       bench-variants bench-variants-reset
+.PHONY: bench-overhead bench-matrix bench-modsim \
+       bench-compare bench bench-full bench-finish
 
-# ── Benchmarks ──────────────────────────────────────────────
-# Each bench target runs criterion, generates report, rebuilds docs.
+# Three suites, three targets. No indirection.
 #
-# bench-compare: funnel vs hylo vs rayon (daily driver)
-# bench:         parallel + comparative
-# bench-full:    everything
+#   bench-overhead — fused vs handrolled (framework cost)
+#   bench-matrix   — full 16-funnel × 14 scenarios + all baselines
+#   bench-modsim   — module resolution simulation
+#
+# Compound:
+#   bench-compare  — matrix + docs rebuild (daily driver)
+#   bench          — matrix + modsim + docs
+#   bench-full     — all three + docs
 
-# Atomic bench units (not user-facing)
-# Each calls bench-one.sh -> streams output, archives raw + criterion + report
-_bench-seq:
-	@bash ../Makefile-scripting/bench-one.sh bench_sequential target/bench-latest/sequential
-_bench-par:
-	@bash ../Makefile-scripting/bench-one.sh bench_parallel target/bench-latest/parallel
-_bench-module:
-	@bash ../Makefile-scripting/bench-one.sh bench_module_sim target/bench-latest/module-sim
-_bench-executor:
-	@bash ../Makefile-scripting/bench-one.sh bench_executor_compare target/bench-latest/executor-compare
-_bench-hylo:
-	@bash ../Makefile-scripting/bench-one.sh bench_hylo_compare target/bench-latest/hylo-compare
+bench-overhead:
+	@bash ../Makefile-scripting/bench-one.sh bench_overhead target/bench-latest/overhead
 
-# Copy reports to docs + rebuild book
+bench-matrix:
+	@bash ../Makefile-scripting/bench-one.sh bench_matrix target/bench-latest/matrix
+
+bench-modsim:
+	@bash ../Makefile-scripting/bench-one.sh bench_modsim target/bench-latest/modsim
+
 bench-finish:
-	@for d in target/bench-latest/*/report; do \
-		cp -r "$$d"/* ../hylic-docs/book/src/bench-results/ 2>/dev/null || true; \
-	done
 	@cd ../hylic-docs/book && mdbook build
 
-# User-facing targets
-bench-compare: _bench-hylo bench-finish
+bench-compare: bench-matrix bench-finish
 
-bench: _bench-par _bench-hylo bench-finish
+bench: bench-matrix bench-modsim bench-finish
 
-bench-full: _bench-seq _bench-par _bench-module _bench-executor _bench-hylo bench-finish
-
-# Cross-variant comparison (git tags, same bench, different source)
-bench-variants:
-	@bash _bench-experiment/run-all.sh
-
-# Restore hylic src/ to current HEAD after interrupted bench-variants run
-bench-variants-reset:
-	@cd ../hylic && git checkout HEAD -- src/
-	@echo "hylic src/ restored to HEAD"
+bench-full: bench-overhead bench-matrix bench-modsim bench-finish

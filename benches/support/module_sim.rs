@@ -205,7 +205,6 @@ pub fn as_problem(sim: &PreparedModuleSim) -> super::problem::BenchProblem<Strin
 pub fn vanilla_baselines<'a>(sim: &'a PreparedModuleSim) -> Vec<super::runners::Runner<'a>> {
     use super::runners::Runner;
     vec![
-        Runner { name: "vanilla.seq",   run: Box::new(|| vanilla_seq(sim)) },
         Runner { name: "vanilla.rayon", run: Box::new(|| vanilla_rayon(sim)) },
     ]
 }
