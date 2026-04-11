@@ -1,5 +1,5 @@
 //! Rayon executor: parallel child recursion via rayon's par_iter.
-//! Shared domain only — requires Sync on fold/graph references.
+//! Shared domain only — requires Sync on graph references.
 
 use hylic::ops::{FoldOps, TreeOps};
 use hylic::domain;
@@ -20,13 +20,16 @@ impl ExecutorSpec for Spec {
     fn with_session<R>(&self, f: impl for<'s> FnOnce(&Self) -> R) -> R { f(self) }
 }
 
-impl<N, R> Executor<N, R, domain::Shared> for Spec
-where N: Clone + Send + Sync + 'static, R: Send + Sync + 'static,
+impl<N, R, G> Executor<N, R, domain::Shared, G> for Spec
+where
+    N: Clone + Send + Sync + 'static,
+    R: Send + Sync + 'static,
+    G: TreeOps<N> + Sync + 'static,
 {
     fn run<H: 'static>(
         &self,
         fold: &<domain::Shared as domain::Domain<N>>::Fold<H, R>,
-        graph: &<domain::Shared as domain::Domain<N>>::Treeish,
+        graph: &G,
         root: &N,
     ) -> R {
         recurse(fold, graph, root)

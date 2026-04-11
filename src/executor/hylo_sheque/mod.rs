@@ -5,14 +5,13 @@ pub(crate) mod fold_chain;
 mod walk;
 
 use std::sync::Arc;
+use hylic::ops::TreeOps;
 use hylic::domain::Domain;
 use hylic_parallel_lifts::{WorkPool, WorkPoolSpec, PoolExecView};
 use hylic::cata::exec::{Executor, ExecutorSpec};
 
 #[derive(Clone, Copy)]
 pub struct Spec {
-    /// Pool size for `.run()` and `.session()`. Not consulted when
-    /// attaching to an explicit pool via `.attach()`.
     pub default_pool_size: usize,
 }
 
@@ -35,11 +34,11 @@ impl ExecutorSpec for Spec {
     }
 }
 
-impl<N, R, D: Domain<N>> Executor<N, R, D> for Spec
+impl<N, R, D: Domain<N>, G: TreeOps<N> + Send + Sync + 'static> Executor<N, R, D, G> for Spec
 where N: Clone + Send + 'static, R: Clone + Send + 'static,
 {
-    fn run<H: 'static>(&self, fold: &D::Fold<H, R>, graph: &D::Treeish, root: &N) -> R {
-        self.with_session(|session| Executor::<N, R, D>::run(session, fold, graph, root))
+    fn run<H: 'static>(&self, fold: &D::Fold<H, R>, graph: &G, root: &N) -> R {
+        self.with_session(|session| Executor::<N, R, D, G>::run(session, fold, graph, root))
     }
 }
 
@@ -49,10 +48,10 @@ pub struct Session<'s> {
     spec: Spec,
 }
 
-impl<N, R, D: Domain<N>> Executor<N, R, D> for Session<'_>
+impl<N, R, D: Domain<N>, G: TreeOps<N> + Send + Sync + 'static> Executor<N, R, D, G> for Session<'_>
 where N: Clone + Send + 'static, R: Clone + Send + 'static,
 {
-    fn run<H: 'static>(&self, fold: &D::Fold<H, R>, graph: &D::Treeish, root: &N) -> R {
+    fn run<H: 'static>(&self, fold: &D::Fold<H, R>, graph: &G, root: &N) -> R {
         let view = PoolExecView::new(self.pool);
         walk::run_fold(fold, graph, root, &view)
     }

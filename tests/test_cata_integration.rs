@@ -9,7 +9,7 @@ fn all_executors_match() {
         N { val: 2, children: vec![N { val: 4, children: vec![] }] },
         N { val: 3, children: vec![] },
     ]};
-    let graph = dom::treeish(|n: &N| n.children.clone());
+    let graph = hylic::graph::treeish(|n: &N| n.children.clone());
     let my_fold = dom::simple_fold(|n: &N| n.val as u64, |a: &mut u64, c: &u64| { *a += c; });
 
     assert_eq!(dom::FUSED.run(&my_fold, &graph, &tree), 10);
@@ -26,7 +26,7 @@ fn all_executors_vec_fold() {
     }
 
     let tree = T::branch("a", vec![T::branch("b", vec![T::leaf("d"), T::leaf("e")]), T::leaf("c")]);
-    let graph = dom::treeish(|n: &T| n.children.clone());
+    let graph = hylic::graph::treeish(|n: &T| n.children.clone());
     use hylic::prelude::{vec_fold, VecHeap};
     let format = |heap: &VecHeap<T, String>| {
         let ch = heap.childresults.join(", ");

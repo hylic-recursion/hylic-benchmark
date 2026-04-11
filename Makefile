@@ -73,10 +73,11 @@ bench-modsim:
 	@bash $(SCRIPTS)/bench-one.sh bench_modsim $(CURDIR)/target/bench-latest/modsim
 
 bench-finish:
-	@cd $(WS_ROOT)/hylic-docs/book && mdbook build
+	@$(MAKE) -C $(WS_ROOT) docs-build
 
 bench-compare: bench-matrix bench-finish
 
 bench: bench-matrix bench-modsim bench-finish
 
-bench-full: bench-overhead bench-matrix bench-modsim bench-quick-light bench-finish
+bench-full: bench-overhead bench-matrix bench-modsim bench-quick-heavy
+# bench-full: bench-overhead bench-matrix bench-modsim bench-quick-light bench-finish

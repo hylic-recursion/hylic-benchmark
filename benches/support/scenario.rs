@@ -1,5 +1,6 @@
 use std::sync::Arc;
-use hylic::domain::shared::{self as dom, Treeish};
+use hylic::domain::shared as dom;
+use hylic::graph::Treeish;
 
 use super::problem::BenchProblem;
 use super::tree::{self, NodeId, TreeSpec};
@@ -32,7 +33,7 @@ pub struct PreparedScenario {
 pub fn make_shared_treeish(work: &WorkSpec, children: &Arc<Vec<Vec<NodeId>>>) -> Treeish<NodeId> {
     let w = work.clone();
     let ch = children.clone();
-    dom::treeish_visit(move |n: &NodeId, cb: &mut dyn FnMut(&NodeId)| {
+    hylic::graph::treeish_visit(move |n: &NodeId, cb: &mut dyn FnMut(&NodeId)| {
         w.do_graph();
         for &child in &ch[*n] { cb(&child); }
     })

@@ -7,7 +7,7 @@ use hylic::domain::shared as dom;
 pub struct BenchProblem<N: 'static> {
     pub name: String,
     pub fold: dom::Fold<N, u64, u64>,
-    pub treeish: dom::Treeish<N>,
+    pub treeish: hylic::graph::Treeish<N>,
     pub root: N,
     pub expected: u64,
 }

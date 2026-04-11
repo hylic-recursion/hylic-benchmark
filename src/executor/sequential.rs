@@ -1,5 +1,5 @@
 //! Sequential executor: collect children to Vec, iterate.
-//! Supports ALL domains — it borrows fold/graph, never clones them.
+//! Supports ALL domains and ALL graph types.
 
 use hylic::ops::{FoldOps, TreeOps};
 use hylic::domain::Domain;
@@ -20,8 +20,8 @@ impl ExecutorSpec for Spec {
     fn with_session<R>(&self, f: impl for<'s> FnOnce(&Self) -> R) -> R { f(self) }
 }
 
-impl<N: Clone + 'static, R: 'static, D: Domain<N>> Executor<N, R, D> for Spec {
-    fn run<H: 'static>(&self, fold: &D::Fold<H, R>, graph: &D::Treeish, root: &N) -> R {
+impl<N: Clone + 'static, R: 'static, D: Domain<N>, G: TreeOps<N> + 'static> Executor<N, R, D, G> for Spec {
+    fn run<H: 'static>(&self, fold: &D::Fold<H, R>, graph: &G, root: &N) -> R {
         recurse(fold, graph, root)
     }
 }
