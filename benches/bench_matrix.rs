@@ -7,7 +7,7 @@ mod support;
 
 use criterion::{criterion_group, criterion_main, Criterion};
 use std::hint::black_box;
-use hylic::cata::exec::funnel;
+use hylic::exec::funnel;
 use hylic_parallel_lifts::{WorkPool, WorkPoolSpec};
 use support::scenario::{self, Scale, PreparedScenario};
 use support::executor_set::{ExecutorSet, FunnelSpecs};

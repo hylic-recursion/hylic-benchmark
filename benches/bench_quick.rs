@@ -12,7 +12,7 @@ mod support;
 
 use criterion::{criterion_group, criterion_main, Criterion};
 use std::hint::black_box;
-use hylic::cata::exec::funnel;
+use hylic::exec::funnel;
 use hylic::domain::shared as dom;
 use support::scenario::{self, Scale, PreparedScenario};
 use support::{baselines, bench_cell};

@@ -73,7 +73,7 @@ fn run_case(label: &str, nodes: usize, bf: usize, gc: u64, fc: u64, iters: u32) 
         // ParLazy / ParEager are `Lift<Shared, N, H, R>` impls. Apply
         // them to the bare (treeish, fold) via LiftBare::run_on — the
         // canonical "apply a lift without going through a pipeline"
-        // entry point. Replaces the retired `hylic::cata::lift::run_lifted`.
+        // entry point. Replaces the retired `hylic::lift::run_lifted`.
         //
         // ParLazy produces a `LazyResult<N, H, R>` at run; `eval`
         // walks that result tree in parallel to collapse it to `R`.

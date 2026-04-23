@@ -6,8 +6,8 @@
 //! NodeId scenarios and String module-sim scenarios.
 
 use hylic::domain::shared as dom;
-use hylic::cata::exec::funnel;
-use hylic::cata::exec::funnel::policy::FunnelPolicy;
+use hylic::exec::funnel;
+use hylic::exec::funnel::policy::FunnelPolicy;
 
 use super::problem::BenchProblem;
 use super::executor_set::ExecutorSet;

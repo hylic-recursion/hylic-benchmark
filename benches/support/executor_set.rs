@@ -1,9 +1,9 @@
 //! ExecutorSet: shared resources for all benchmark runners.
 
 use std::sync::Arc;
-use hylic::cata::exec::funnel;
-use hylic::cata::exec::funnel::policy;
-use hylic::cata::exec::funnel::wake;
+use hylic::exec::funnel;
+use hylic::exec::funnel::policy;
+use hylic::exec::funnel::wake;
 use hylic_parallel_lifts::WorkPool;
 
 /// All 16 funnel policy variants: 4 queue×accumulate × 4 wake.

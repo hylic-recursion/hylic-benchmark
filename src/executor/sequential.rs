@@ -3,7 +3,7 @@
 
 use hylic::ops::{FoldOps, TreeOps};
 use hylic::domain::Domain;
-use hylic::cata::exec::{Executor, ExecutorSpec};
+use hylic::exec::{Executor, ExecutorSpec};
 
 pub struct Spec;
 

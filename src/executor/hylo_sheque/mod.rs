@@ -8,7 +8,7 @@ use std::sync::Arc;
 use hylic::ops::TreeOps;
 use hylic::domain::Domain;
 use hylic_parallel_lifts::{WorkPool, WorkPoolSpec, PoolExecView};
-use hylic::cata::exec::{Executor, ExecutorSpec};
+use hylic::exec::{Executor, ExecutorSpec};
 
 #[derive(Clone, Copy)]
 pub struct Spec {
