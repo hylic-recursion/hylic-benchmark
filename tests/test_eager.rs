@@ -1,5 +1,12 @@
+//! Integration benchmark: six execution strategies on the same tree
+//! fold (fused / rayon / ParLazy-over-{fused,rayon} / ParEager-over-
+//! {fused,rayon}). These exercise timing + correctness; they are
+//! `#[ignore]` by default so `cargo test` doesn't invoke them — run
+//! on demand with `cargo test -p hylic-benchmark -- --ignored` or
+//! `make bench-integration` from the workspace root.
+
 use hylic::domain::shared as dom;
-// Executor — trait, needed for .run()
+use hylic::ops::LiftBare;
 use hylic_parallel_lifts::{ParLazy, ParEager, EagerSpec, WorkPool, WorkPoolSpec};
 use std::sync::Arc;
 use std::hint::black_box;
@@ -63,29 +70,50 @@ fn run_case(label: &str, nodes: usize, bf: usize, gc: u64, fc: u64, iters: u32) 
     timed("fused",        iters, expected, || dom::FUSED.run(&fold, &graph, &ROOT));
     timed("rayon",        iters, expected, || dom::exec(hylic_benchmark::executor::rayon::Spec).run(&fold, &graph, &ROOT));
     WorkPool::with(WorkPoolSpec::threads(3), |pool| {
-        timed("parref+fused", iters, expected, || hylic::cata::lift::run_lifted(&dom::FUSED, &ParLazy::new(pool), &fold, &graph, &ROOT));
-        timed("parref+rayon", iters, expected, || hylic::cata::lift::run_lifted(&dom::exec(hylic_benchmark::executor::rayon::Spec), &ParLazy::new(pool), &fold, &graph, &ROOT));
-        timed("eager+fused", iters, expected, || ParEager::lift(pool, EagerSpec::default_for(3)).run(&dom::FUSED, &fold, &graph, &ROOT));
-        timed("eager+rayon", iters, expected, || ParEager::lift(pool, EagerSpec::default_for(3)).run(&dom::exec(hylic_benchmark::executor::rayon::Spec), &fold, &graph, &ROOT));
+        // ParLazy / ParEager are `Lift<Shared, N, H, R>` impls. Apply
+        // them to the bare (treeish, fold) via LiftBare::run_on — the
+        // canonical "apply a lift without going through a pipeline"
+        // entry point. Replaces the retired `hylic::cata::lift::run_lifted`.
+        //
+        // ParLazy produces a `LazyResult<N, H, R>` at run; `eval`
+        // walks that result tree in parallel to collapse it to `R`.
+        timed("parref+fused", iters, expected, || {
+            let lift = ParLazy::new(pool);
+            let lazy = lift.run_on(&dom::FUSED, graph.clone(), fold.clone(), &ROOT);
+            lift.eval(lazy)
+        });
+        timed("parref+rayon", iters, expected, || {
+            let lift = ParLazy::new(pool);
+            let lazy = lift.run_on(&dom::exec(hylic_benchmark::executor::rayon::Spec), graph.clone(), fold.clone(), &ROOT);
+            lift.eval(lazy)
+        });
+        timed("eager+fused", iters, expected, ||
+            ParEager::lift(pool, EagerSpec::default_for(3)).run(&dom::FUSED, &fold, &graph, &ROOT));
+        timed("eager+rayon", iters, expected, ||
+            ParEager::lift(pool, EagerSpec::default_for(3)).run(&dom::exec(hylic_benchmark::executor::rayon::Spec), &fold, &graph, &ROOT));
     });
 }
 
 #[test]
+#[ignore = "benchmark (timing + parallelism); opt-in via `cargo test -- --ignored` or `make bench-integration`"]
 fn eager_overhead_branching() {
     run_case("0us:overhead bf=8", 200, 8, 0, 0, 20);
 }
 
 #[test]
+#[ignore = "benchmark (timing + parallelism); opt-in via `cargo test -- --ignored` or `make bench-integration`"]
 fn eager_overhead_linear() {
     run_case("0us:overhead bf=1", 200, 1, 0, 0, 20);
 }
 
 #[test]
+#[ignore = "benchmark (timing + parallelism); opt-in via `cargo test -- --ignored` or `make bench-integration`"]
 fn eager_light_branching() {
     run_case("10us:light bf=8", 200, 8, 5_000, 5_000, 5);
 }
 
 #[test]
+#[ignore = "benchmark (timing + parallelism); opt-in via `cargo test -- --ignored` or `make bench-integration`"]
 fn eager_heavy_branching() {
     run_case("100us:balanced bf=8", 200, 8, 100_000, 100_000, 3);
 }

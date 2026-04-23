@@ -109,7 +109,7 @@ fn all_domains_agree() {
 #[test]
 fn shared_map() {
     let fold = dom::fold(sum_init, sum_acc, sum_fin);
-    let mapped = fold.map(
+    let mapped = fold.map_r_bi(
         |r: &u64| format!("v={}", r),
         |s: &String| s.strip_prefix("v=").unwrap().parse().unwrap(),
     );
@@ -132,7 +132,7 @@ fn shared_zipmap() {
 fn shared_contramap() {
     // Contramap: change node type from String → N
     let fold = dom::fold(sum_init, sum_acc, sum_fin);
-    let contramapped = fold.contramap(|s: &String| N { val: s.len() as i32, children: vec![] });
+    let contramapped = fold.contramap_n(|s: &String| N { val: s.len() as i32, children: vec![] });
     let graph = hylic::graph::treeish_visit(|_: &String, _cb: &mut dyn FnMut(&String)| {});
     let result = dom::FUSED.run(&contramapped, &graph, &"hello".to_string());
     assert_eq!(result, 5);
@@ -158,7 +158,7 @@ fn shared_product() {
 #[test]
 fn local_map() {
     let fold = hylic::domain::local::fold(sum_init, sum_acc, sum_fin);
-    let mapped = fold.map(
+    let mapped = fold.map_r_bi(
         |r: &u64| format!("v={}", r),
         |s: &String| s.strip_prefix("v=").unwrap().parse().unwrap(),
     );
@@ -180,7 +180,7 @@ fn local_zipmap() {
 #[test]
 fn local_contramap() {
     let fold = hylic::domain::local::fold(sum_init, sum_acc, sum_fin);
-    let contramapped = fold.contramap(|s: &String| N { val: s.len() as i32, children: vec![] });
+    let contramapped = fold.contramap_n(|s: &String| N { val: s.len() as i32, children: vec![] });
     let graph = hylic::graph::treeish_visit(|_: &String, _cb: &mut dyn FnMut(&String)| {});
     let result = hylic::domain::local::FUSED.run(&contramapped, &graph, &"hello".to_string());
     assert_eq!(result, 5);
@@ -212,8 +212,8 @@ fn transformations_agree_across_domains() {
     // map
     let sf = dom::fold(sum_init, sum_acc, sum_fin);
     let lf = hylic::domain::local::fold(sum_init, sum_acc, sum_fin);
-    let sm = sf.map(|r: &u64| *r * 2, |r: &u64| *r / 2);
-    let lm = lf.map(|r: &u64| *r * 2, |r: &u64| *r / 2);
+    let sm = sf.map_r_bi(|r: &u64| *r * 2, |r: &u64| *r / 2);
+    let lm = lf.map_r_bi(|r: &u64| *r * 2, |r: &u64| *r / 2);
     assert_eq!(
         dom::FUSED.run(&sm, &sg, &tree),
         hylic::domain::local::FUSED.run(&lm, &lg, &tree),
