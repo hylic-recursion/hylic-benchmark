@@ -242,20 +242,20 @@ fn transformations_agree_across_domains() {
     );
 }
 
-// ── Owned: simple_fold works ──────────────────────
+// ── Owned: fold works ─────────────────────────────
 
 #[test]
-fn owned_simple_fold() {
-    let fold = hylic::domain::owned::simple_fold(sum_init, sum_acc);
+fn owned_fold() {
+    let fold = hylic::domain::owned::fold(sum_init, sum_acc, sum_fin);
     let graph = hylic::graph::treeish_visit(tree_children);
     assert_eq!(hylic::domain::owned::FUSED.run(&fold, &graph, &sample_tree()), EXPECTED);
 }
 
-// ── Local: simple_fold works ──────────────────────
+// ── Local: fold works ─────────────────────────────
 
 #[test]
-fn local_simple_fold() {
-    let fold = hylic::domain::local::simple_fold(sum_init, sum_acc);
+fn local_fold() {
+    let fold = hylic::domain::local::fold(sum_init, sum_acc, sum_fin);
     let graph = hylic::graph::treeish_visit(tree_children);
     assert_eq!(hylic::domain::local::FUSED.run(&fold, &graph, &sample_tree()), EXPECTED);
 }

@@ -10,7 +10,7 @@ fn all_executors_match() {
         N { val: 3, children: vec![] },
     ]};
     let graph = hylic::graph::treeish(|n: &N| n.children.clone());
-    let my_fold = dom::simple_fold(|n: &N| n.val as u64, |a: &mut u64, c: &u64| { *a += c; });
+    let my_fold = dom::fold(|n: &N| n.val as u64, |a: &mut u64, c: &u64| { *a += c; }, |h: &u64| *h);
 
     assert_eq!(dom::FUSED.run(&my_fold, &graph, &tree), 10);
     assert_eq!(dom::exec(hylic_benchmark::executor::rayon::Spec).run(&my_fold, &graph, &tree), 10);

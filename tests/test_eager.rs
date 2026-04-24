@@ -63,7 +63,7 @@ fn run_case(label: &str, nodes: usize, bf: usize, gc: u64, fc: u64, iters: u32) 
     let graph = hylic::graph::treeish(move |n: &NodeId| { if gc > 0 { black_box(busy_work(gc)); } ch[*n].clone() });
     let init = move |_: &NodeId| { if fc > 0 { busy_work(fc) } else { 0u64 } };
     let acc = |a: &mut u64, c: &u64| { *a = a.wrapping_add(*c); };
-    let fold = dom::simple_fold(init, acc);
+    let fold = dom::fold(init, acc, |h: &u64| *h);
     let expected = dom::FUSED.run(&fold, &graph, &ROOT);
 
     eprintln!("\n=== {} ({} nodes, bf={}) ===", label, count, bf);
