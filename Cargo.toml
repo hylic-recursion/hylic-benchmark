@@ -1,12 +1,12 @@
 [package]
 name = "hylic-benchmark"
-version = "0.1.0"
+version = "0.8.0"
 edition = "2024"
 description = "Benchmark suite and comparison executors for hylic"
 
 [dependencies]
-hylic = { path = "../hylic" }
-hylic-parallel-lifts = { path = "../hylic-parallel-lifts" }
+hylic = { path = "../hylic", version = "0.8" }
+hylic-parallel-lifts = { path = "../hylic-parallel-lifts", version = "0.8" }
 rayon = "1.10"
 
 [dev-dependencies]
