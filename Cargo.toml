@@ -2,7 +2,9 @@
 name = "hylic-benchmark"
 version = "0.8.0"
 edition = "2024"
-description = "Benchmark suite and comparison executors for hylic"
+description = "Benchmark suite and comparison executors for hylic."
+readme = "README.md"
+publish = false
 
 [dependencies]
 hylic = { path = "../hylic", version = "0.8" }
