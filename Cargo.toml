@@ -3,6 +3,7 @@ name = "hylic-benchmark"
 version = "0.8.0"
 edition = "2024"
 description = "Benchmark suite and comparison executors for hylic."
+license = "MIT"
 readme = "README.md"
 publish = false
 
