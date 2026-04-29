@@ -8,7 +8,7 @@ readme = "README.md"
 publish = false
 
 [dependencies]
-hylic = { path = "../hylic", version = "0.8" }
+hylic = "0.8"
 rayon = "1.10"
 
 [dev-dependencies]
