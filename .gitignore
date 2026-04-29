@@ -1,2 +1,14 @@
+# Build output
 target/
-_bench-experiment/runs/
+
+# Knowledge base, planning, scratch — never tracked in OSS publication
+KB/
+.plans/
+.scratch-notes/
+__Scratch__/
+_bench-experiment/
+notes.txt
+
+# Python bytecode
+__pycache__/
+*.pyc
