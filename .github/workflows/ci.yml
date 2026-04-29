@@ -9,12 +9,33 @@ on:
 env:
   CARGO_TERM_COLOR: always
 
+# hylic-benchmark depends on hylic + hylic-parallel-lifts via path.
+# CI co-checks them out so cargo's path-deps resolve without needing
+# hylic to be on crates.io yet.
+
 jobs:
   check:
     name: cargo check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout hylic-benchmark
+        uses: actions/checkout@v4
+        with:
+          path: hylic-benchmark
+      - name: Checkout hylic
+        uses: actions/checkout@v4
+        with:
+          repository: simlei/hylic
+          path: hylic
+      - name: Checkout hylic-parallel-lifts
+        uses: actions/checkout@v4
+        with:
+          repository: simlei/hylic-parallel-lifts
+          path: hylic-parallel-lifts
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
-      - run: cargo check --all-targets
+        with:
+          workspaces: hylic-benchmark
+      - name: cargo check
+        working-directory: hylic-benchmark
+        run: cargo check --all-targets
