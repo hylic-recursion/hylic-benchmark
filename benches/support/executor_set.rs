@@ -1,10 +1,8 @@
 //! ExecutorSet: shared resources for all benchmark runners.
 
-use std::sync::Arc;
 use hylic::exec::funnel;
 use hylic::exec::funnel::policy;
 use hylic::exec::funnel::wake;
-use hylic_parallel_lifts::WorkPool;
 
 /// All 16 funnel policy variants: 4 queue×accumulate × 4 wake.
 pub struct FunnelSpecs {
@@ -65,8 +63,6 @@ impl FunnelSpecs {
 /// Shared resources for a benchmark session. Constructed once, passed to all runners.
 pub struct ExecutorSet<'a> {
     pub fpool: &'a funnel::Pool<'a>,
-    pub wpool: &'a Arc<WorkPool>,
     pub nw: usize,
-    pub sheque: hylic_benchmark::executor::hylo_sheque::Spec,
     pub funnel: FunnelSpecs,
 }

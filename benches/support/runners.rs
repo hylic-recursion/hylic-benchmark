@@ -26,11 +26,6 @@ pub fn rayon<'a, N: Clone + Send + Sync + 'static>(p: &'a BenchProblem<N>) -> Ru
     Runner { name: "rayon", run: Box::new(move || exec.run(&p.fold, &p.treeish, &p.root)) }
 }
 
-pub fn sheque<'a, N: Clone + Send + 'static>(p: &'a BenchProblem<N>, es: &'a ExecutorSet) -> Runner<'a> {
-    let exec = dom::exec(es.sheque).attach(es.wpool);
-    Runner { name: "sheque", run: Box::new(move || exec.run(&p.fold, &p.treeish, &p.root)) }
-}
-
 pub fn funnel_variant<'a, N: Clone + Send + 'static, P: FunnelPolicy>(
     name: &'static str, p: &'a BenchProblem<N>, es: &'a ExecutorSet, spec: funnel::Spec<P>,
 ) -> Runner<'a> {
@@ -73,10 +68,7 @@ pub fn funnel_runners<'a, N: Clone + Send + 'static>(
 pub fn all_hylic_runners<'a, N: Clone + Send + Sync + 'static>(
     p: &'a BenchProblem<N>, es: &'a ExecutorSet,
 ) -> Vec<Runner<'a>> {
-    let mut v = vec![
-        rayon(p),
-        sheque(p, es),
-    ];
+    let mut v = vec![rayon(p)];
     v.extend(funnel_runners(p, es));
     v
 }

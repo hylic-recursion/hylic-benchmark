@@ -1,7 +1,7 @@
 # hylic-benchmark
 
 Criterion-based benchmark suite for the [`hylic`](../hylic/) core
-and [`hylic-parallel-lifts`](../hylic-parallel-lifts/) executors.
+executor matrix.
 
 ## What's here
 
