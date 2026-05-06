@@ -77,11 +77,8 @@ Toggle axes to marginalize. Toggle workloads and benchmarks to filter.
     const root = document.getElementById('funnel-analysis');
     if (!root) return;
 
-    // ── Constants ──────────────────────────────────
     const AX_CLS = { queue: 'q', accumulate: 'a', wake: 'w' };
-    const NOOP_WLS = new Set(); // populated after data load
 
-    // ── State ──────────────────────────────────────
     let DATA = null;
     let state = {
         marg: { queue: false, accumulate: false, wake: false },
@@ -89,7 +86,6 @@ Toggle axes to marginalize. Toggle workloads and benchmarks to filter.
         excludedBenchmarks: new Set(),
     };
 
-    // ── Pure: formatting ───────────────────────────
     function pct(ms, wl) {
         const b = DATA.baseline_values[wl];
         return (b && ms) ? ((ms - b) / b) * 100 : null;
@@ -113,7 +109,6 @@ Toggle axes to marginalize. Toggle workloads and benchmarks to filter.
         return { mean, min, max, sd };
     }
 
-    // ── Pure: derived data ─────────────────────────
     function activeWorkloads() {
         return DATA.workloads.filter(w => !state.excludedWorkloads.has(w));
     }
@@ -154,7 +149,6 @@ Toggle axes to marginalize. Toggle workloads and benchmarks to filter.
         return DATA.axis_names.filter(a => !state.marg[a]);
     }
 
-    // ── Render: controls ───────────────────────────
     function renderControls() {
         const wls = DATA.workloads;
         const allBenchmarks = [
@@ -233,8 +227,7 @@ Toggle axes to marginalize. Toggle workloads and benchmarks to filter.
         });
     }
 
-    // ── Render: table ──────────────────────────────
-    // Shows ALL workloads; excluded ones are dimmed but visible.
+    // Shows all workloads; excluded ones are dimmed but stay visible.
     function renderTable() {
         const g = grouped();
         const gks = Object.keys(g).sort();
@@ -291,7 +284,6 @@ Toggle axes to marginalize. Toggle workloads and benchmarks to filter.
         document.getElementById('fa-table').innerHTML = h;
     }
 
-    // ── Render: summary ────────────────────────────
     function renderSummary() {
         const wls = activeWorkloads();
         const funnel = activeFunnel();
@@ -315,7 +307,6 @@ Toggle axes to marginalize. Toggle workloads and benchmarks to filter.
         }
         h += '</div></div>';
 
-        // Interaction effects — only non-marginalized axes
         if (axes.length >= 2) {
             h += '<details><summary>Axis interaction effects</summary><div class="summary"><div class="sg">';
             for (let i = 0; i < axes.length; i++) {
@@ -362,25 +353,25 @@ Toggle axes to marginalize. Toggle workloads and benchmarks to filter.
         document.getElementById('fa-summary').innerHTML = h;
     }
 
-    // ── Orchestration ──────────────────────────────
     function renderAll() {
         renderControls();
         renderTable();
         renderSummary();
     }
 
+    // Exclude noop by default — sub-ms cells, extreme ratios distort the aggregates.
     function initDefaults() {
-        // Exclude noop by default (extreme ratios distort averages)
         for (const wl of DATA.workloads) {
             if (wl.startsWith('noop')) state.excludedWorkloads.add(wl);
         }
     }
 
-    // ── Load and go ────────────────────────────────
-    fetch('../bench-results/matrix-analysis.json')
-        .then(r => r.ok ? r.json() : Promise.reject('not found'))
-        .then(d => { DATA = d; initDefaults(); renderAll(); })
-        .catch(e => { document.getElementById('fa-table').textContent = '(analysis data not available)'; });
+    fetch('../bench-results/matrix-analysis.json').then(async r => {
+        if (!r.ok) throw new Error('matrix-analysis.json: HTTP ' + r.status);
+        DATA = await r.json();
+        initDefaults();
+        renderAll();
+    });
 })();
 </script>
 </div>

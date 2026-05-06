@@ -55,7 +55,6 @@ current_label=""
 
 require_clean_tree "$repo__hylic"
 
-# ── Signal handling ─────────────────────────────────
 interrupted() {
     sub_banner "INTERRUPTED at $(date +%H:%M:%S)"
     echo "  Processing: $current_label" >&2
@@ -66,7 +65,6 @@ interrupted() {
 }
 trap interrupted INT TERM HUP
 
-# ── Banner ──────────────────────────────────────────
 banner "bench-ab: $bench_name across ${#revisions[@]} revisions"
 log "hylic HEAD: $return_branch ($(git -C "$repo__hylic" rev-parse --short HEAD))"
 log "samples=${HYLIC_BENCH_SAMPLES:-default} warmup=${HYLIC_BENCH_WARMUP:-default}s measure=${HYLIC_BENCH_MEASURE:-default}s"
@@ -81,7 +79,6 @@ for spec in "${revisions[@]}"; do
     fi
 done
 
-# ── Main loop ───────────────────────────────────────
 for spec in "${revisions[@]}"; do
     label="${spec%%=*}"
     ref="${spec#*=}"
@@ -105,7 +102,6 @@ for spec in "${revisions[@]}"; do
     log "$label — done"
 done
 
-# ── Archive ─────────────────────────────────────────
 if [ -n "$archive_dir" ]; then
     dest="$archive_dir/$timestamp"
     mkdir -p "$dest"
@@ -121,7 +117,6 @@ fi
 
 trap - INT TERM HUP
 
-# ── Summary ─────────────────────────────────────────
 banner "bench-ab complete: $bench_name"
 log "results: $run_dir"
 for spec in "${revisions[@]}"; do

@@ -40,25 +40,22 @@ criterion_dir="$target_dir/criterion"
 banner "$bench_name → $output_dir"
 log "samples=$sample_size warmup=${warm_up}s measure=${measure}s mode=$MODE"
 
-# Drop stale criterion entries for this group (criterion accumulates;
-# renamed runners would otherwise persist as ghosts).
+# Drop stale criterion entries for this group — criterion accumulates,
+# renamed runners would otherwise persist as ghosts.
 rm -rf "$criterion_dir/$group_name"
 
-# Run benchmark — stream to terminal AND save to file.
 cargo bench -p hylic-benchmark --bench "$bench_name" -- \
     --sample-size "$sample_size" \
     --warm-up-time "$warm_up" \
     --measurement-time "$measure" \
     2>&1 | tee "$output_dir/raw.txt"
 
-# Snapshot criterion JSON next to the raw output.
 [ -d "$criterion_dir/$group_name" ] \
     || abort "criterion did not produce $criterion_dir/$group_name"
 rm -rf "$output_dir/criterion"
 mkdir -p "$output_dir/criterion"
 cp -r "$criterion_dir/$group_name" "$output_dir/criterion/$group_name"
 
-# Render the report from the snapshot.
 mkdir -p "$output_dir/report"
 python3 "$repo__hylic_benchmark/scripts/bench-report.py" \
     --group "$group_name" \
